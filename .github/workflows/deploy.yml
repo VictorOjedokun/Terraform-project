@@ -45,18 +45,35 @@ jobs:
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Download current task definition
-        run: |
-          aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION \
-          --query taskDefinition > task-def.json
+     
 
-      - name: Update task definition with new image
+      - name: Create new task definition file
         id: task-def
         run: |
-          NEW_IMAGE="${{ steps.build-image.outputs.image }}"
-          jq --arg IMAGE "$NEW_IMAGE" --arg NAME "$CONTAINER_NAME" \
-          '.containerDefinitions |= map(if .name == $NAME then .image = $IMAGE else . end)' \
-          task-def.json > new-task-def.json
+          cat > new-task-def.json <<EOF
+          {
+            "family": "fastapi-ecs-project-task",
+            "networkMode": "awsvpc",
+            "requiresCompatibilities": ["FARGATE"],
+            "cpu": "256",
+            "memory": "512",
+            "executionRoleArn": "${{ secrets.ECS_TASK_EXECUTION_ROLE_ARN }}",
+            "containerDefinitions": [
+              {
+                "name": "${{ env.CONTAINER_NAME }}",
+                "image": "${{ steps.build-image.outputs.image }}",
+                "essential": true,
+                "portMappings": [
+                  {
+                    "containerPort": 80,
+                    "protocol": "tcp"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
 
       - name: Register new task definition
         id: register-task-def
