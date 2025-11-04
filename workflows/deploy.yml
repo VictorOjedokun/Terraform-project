@@ -3,7 +3,7 @@ name: Deploy to AWS ECS
 on:
   workflow_dispatch:
    inputs:
-    enironment:
+    environment:
       description: 'Deployment environment'
       required: true
       default: 'production'
