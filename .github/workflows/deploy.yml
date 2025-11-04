@@ -1,15 +1,12 @@
 name: Deploy to AWS ECS
 
 on:
-  push:
-    branches:
-      - main
-  # workflow_dispatch:
-  #  inputs:
-  #   environment:
-  #     description: 'Deployment environment'
-  #     required: true
-  #     default: 'production'
+  workflow_dispatch:
+   inputs:
+    environment:
+      description: 'Deployment environment'
+      required: true
+      default: 'production'
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
